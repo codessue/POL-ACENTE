@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% from "_makro.html" import nesne_secim, secim, durum_rozet, kalan_rozet %}
+{% block baslik %}Yenileme Süreci{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Yenileme Süreci</h1><span class="sessiz">Dönem {{ donem_kodu }} · yenileme oranı <b>% {{ ozet.oran }}</b></span>
+  <div class="sag"><form method="post" action="/yenileme/havuzu-guncelle" class="satir-islem"><input type="number" name="gun" value="{{ yenileme_gun }}" style="width:70px" title="Bitişine kaç gün kalanlar"><button class="btn ikincil kucuk">Havuzu Güncelle</button></form>
+  <a class="btn kucuk {{ 'ikincil' if gorunum != 'pano' }}" href="?donem_kodu={{ donem_kodu }}&gorunum=pano">Pano</a><a class="btn kucuk {{ 'ikincil' if gorunum != 'liste' }}" href="?donem_kodu={{ donem_kodu }}&gorunum=liste">Liste</a></div></div>
+<form class="panel filtre" method="get"><input type="hidden" name="gorunum" value="{{ gorunum }}">
+  {{ secim('donem_kodu','Dönem',[('tum','Tüm dönemler')] + donemler,donem_kodu,bos=none,ekstra='data-oto-gonder') }}
+  {{ nesne_secim('temsilci_id','Temsilci',temsilciler,temsilci_id,'ad_soyad',bos='Tümü',ekstra='data-oto-gonder') }}
+  {{ nesne_secim('ana_brans_id','Branş',branslar,ana_brans_id,bos='Tümü',ekstra='data-oto-gonder') }}
+  {{ secim('pozisyon','Pozisyon',POZISYONLAR,pozisyon,bos='Tümü',ekstra='data-oto-gonder') }}
+  <noscript><button class="btn">Uygula</button></noscript>
+</form>
+<div class="grid g5" style="margin-bottom:14px">
+  {% for poz in POZISYONLAR[:5] %}<div class="kart"><div class="etiket">{{ poz }}</div><div class="deger">{{ ozet[poz] }}</div></div>{% endfor %}
+</div>
+{% if gorunum == 'pano' %}
+<div class="kanban">
+{% for poz in ['Bekliyor','Arandı','Teklif Alındı','Teklif Sunuldu'] %}
+  <div class="kolon"><h3>{{ poz }} <span>{{ kolonlar[poz]|length }}</span></h3>
+  {% for s in kolonlar[poz] %}
+  <a class="kartcik" href="/yenileme/{{ s.id }}" style="display:block;color:inherit"><b>{{ s.hesap.unvan }}</b>{{ s.ana_brans.ad }} · {{ s.police.sirket.ad if s.police else (s.potansiyel.eski_sirket if s.potansiyel else '') }}
+    <br><small>{{ s.bitis_tarihi|tarih }} {{ kalan_rozet(s.kalan_gun) }}{% if s.police %} · {{ s.police.brut_prim|tl }} ₺{% endif %}{% if s.teklifler %} · {{ s.teklifler|length }} teklif{% endif %}</small>
+    <br><small class="sessiz">{{ s.temsilci.ad_soyad if s.temsilci else 'temsilci yok' }}{% if s.potansiyel_id %} · potansiyel{% endif %}</small></a>
+  {% endfor %}</div>
+{% endfor %}
+</div>
+<div class="panel" style="margin-top:14px"><h2>Kapananlar</h2><table><tr><th>Sonuç</th><th>Sigortalı</th><th>Branş</th><th>Bitiş</th><th>Kapanış</th><th>Neden / Yeni Poliçe</th><th>Temsilci</th></tr>
+{% for poz in ['Yenilendi','Kaybedildi','İptal'] %}{% for s in kolonlar[poz] %}<tr><td>{{ durum_rozet(s.pozisyon) }}</td><td><a href="/yenileme/{{ s.id }}">{{ s.hesap.unvan }}</a></td><td>{{ s.ana_brans.ad }}</td><td>{{ s.bitis_tarihi|tarih }}</td><td>{{ s.kapanis_tarihi|tarih }}</td>
+<td>{% if s.yeni_police %}<a href="/policeler/{{ s.yeni_police_id }}">{{ s.yeni_police.police_no }} · {{ s.yeni_police.sirket.ad }}</a>{% else %}{{ s.sonuc_nedeni or '' }}{% endif %}</td><td>{{ s.temsilci.ad_soyad if s.temsilci else '' }}</td></tr>{% endfor %}{% endfor %}</table></div>
+{% else %}
+<div class="panel tablo-kaydir"><table><tr><th>Pozisyon</th><th>Dönem</th><th>Sigortalı</th><th>GSM</th><th>Branş</th><th>Mevcut Şirket</th><th>Bitiş</th><th>Kalan</th><th class="sag">Mevcut Prim</th><th>Teklif</th><th>Temsilci</th><th></th></tr>
+{% for s in kayitlar %}<tr><td>{{ durum_rozet(s.pozisyon) }}</td><td>{{ s.donem }}</td><td><a href="/hesaplar/{{ s.hesap_id }}">{{ s.hesap.unvan }}</a></td><td>{{ s.hesap.gsm }}</td><td>{{ s.ana_brans.ad }}</td><td>{{ s.police.sirket.ad if s.police else (s.potansiyel.eski_sirket if s.potansiyel else '') }}</td>
+<td>{{ s.bitis_tarihi|tarih }}</td><td>{{ kalan_rozet(s.kalan_gun) if s.acik }}</td><td class="sag">{{ (s.police.brut_prim if s.police else s.potansiyel.eski_brut_prim)|tl }}</td><td>{{ s.teklifler|length }}</td><td>{{ s.temsilci.ad_soyad if s.temsilci else '' }}</td><td><a class="btn kucuk ikincil" href="/yenileme/{{ s.id }}">Aç</a></td></tr>
+{% else %}<tr><td colspan="12" class="sessiz">Kayıt yok. "Havuzu Güncelle" ile bitişi yaklaşan poliçeleri sürece alın.</td></tr>{% endfor %}</table></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}{% from "_makro.html" import kalan_rozet, durum_rozet %}
+{% block baslik %}Dashboard{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Dashboard</h1><span class="sessiz">{{ bugun().strftime('%d %B %Y') }}</span>
+  <div class="sag"><a class="btn ikincil kucuk" href="/mesajlar/toplu">Toplu Hatırlatma</a><a class="btn kucuk" href="/yenileme">Yenileme Panosu</a></div></div>
+
+<div class="grid g5" style="margin-bottom:18px">
+  <div class="kart vurgu"><div class="etiket">Aktif Poliçe</div><div class="deger">{{ kartlar.aktif_police }}</div><div class="alt">{{ kartlar.musteri }} aktif müşteri</div></div>
+  <div class="kart iyi"><div class="etiket">Bu Ay Üretim</div><div class="deger">{{ kartlar.bu_ay_uretim|tl }} ₺</div><div class="alt">{{ kartlar.bu_ay_adet }} poliçe · {{ kartlar.bu_ay_komisyon|tl }} ₺ komisyon</div></div>
+  <div class="kart uyari"><div class="etiket">30 Gün İçinde Bitecek</div><div class="deger"><a href="/policeler?on=30">{{ kartlar.bitecek_30 }}</a></div><div class="alt"><a href="/policeler?on=7">{{ kartlar.bitecek_7 }} tanesi bu hafta</a></div></div>
+  <div class="kart tehlike"><div class="etiket">Vadesi Geçmiş Taksit</div><div class="deger"><a href="/tahsilat?gorunum=vadesi">{{ kartlar.gecikmis_taksit|tl }} ₺</a></div><div class="alt">tahsil edilmemiş</div></div>
+  <div class="kart"><div class="etiket">Açık İş</div><div class="deger"><a href="/talepler">{{ kartlar.acik_talep }}</a> <small class="sessiz">talep</small></div><div class="alt"><a href="/potansiyel">{{ kartlar.acik_potansiyel }} potansiyel satış</a></div></div>
+</div>
+
+<div class="grid g3">
+  <div class="panel" style="grid-column:span 2">
+    <h2>Yaklaşan Poliçe Bitişleri <small class="sessiz">(30 gün)</small></h2>
+    <div class="tablo-kaydir" style="max-height:360px">
+    <table><tr><th>Bitiş</th><th>Kalan</th><th>Sigortalı</th><th>Branş</th><th>Şirket</th><th>Plaka</th><th class="sag">Brüt</th><th></th></tr>
+    {% for p in yaklasan %}<tr><td class="nowrap">{{ p.bitis_tarihi|tarih }}</td><td>{{ kalan_rozet(p.kalan_gun) }}</td><td><a href="/hesaplar/{{ p.hesap_id }}">{{ p.hesap.unvan }}</a></td>
+      <td>{{ p.ana_brans.ad }}</td><td>{{ p.sirket.ad }}</td><td>{{ p.plaka or '' }}</td><td class="sag">{{ p.brut_prim|tl }}</td><td><a class="btn kucuk ikincil" href="/policeler/{{ p.id }}">Aç</a></td></tr>
+    {% else %}<tr><td colspan="8" class="sessiz">Yaklaşan bitiş yok.</td></tr>{% endfor %}</table></div>
+  </div>
+  <div class="panel">
+    <h2>Yenileme Süreci <small class="sessiz">{{ donem_kodu }}</small></h2>
+    <dl class="kv">
+      {% for poz in POZISYONLAR %}<dt>{{ poz }}</dt><dd><a href="/yenileme?donem_kodu={{ donem_kodu }}&pozisyon={{ poz }}">{{ yen[poz] }}</a></dd>{% endfor %}
+      <dt><b>Yenileme Oranı</b></dt><dd><b>% {{ yen.oran }}</b></dd>
+    </dl>
+    <div class="bar" style="margin-top:8px"><i style="width:{{ yen.oran }}%"></i></div>
+  </div>
+</div>
+
+<div class="grid g3">
+  <div class="panel">
+    <h2>Bugünkü Görevler</h2>
+    {% for g in gorevler %}
+    <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">
+      <form method="post" action="/ajanda/{{ g.id }}/durum"><input type="hidden" name="durum" value="Tamamlandı"><button class="btn kucuk ok" title="Tamamla">✓</button></form>
+      <div style="flex:1"><b>{{ g.baslik }}</b> <span class="rozet gri">{{ g.tip }}</span><br><small class="sessiz">{{ g.tarih|tarih }} {{ g.saat or '' }} {% if g.hesap %}· <a href="/hesaplar/{{ g.hesap_id }}">{{ g.hesap.unvan }}</a>{% endif %}</small></div>
+    </div>
+    {% else %}<p class="sessiz">Açık görev yok. <a href="/ajanda/yeni">Görev ekle</a></p>{% endfor %}
+  </div>
+  <div class="panel">
+    <h2>Aylık Üretim <small class="sessiz">(brüt, son 6 ay)</small></h2>
+    <div class="sutun-grafik">
+      {% for ay, tutar in aylar %}<div class="s" title="{{ tutar|tl }} ₺"><b style="height:{{ (tutar / maks * 120)|int }}px"></b>{{ ay }}</div>{% endfor %}
+    </div>
+    <h3 style="margin-top:14px">Branş Dağılımı <small class="sessiz">(12 ay)</small></h3>
+    {% set en = (brans_uretim[0][2] if brans_uretim else 1) or 1 %}
+    {% for ad, adet, tutar in brans_uretim[:6] %}
+    <div class="kucuk" style="display:flex;justify-content:space-between"><span>{{ ad }} <span class="sessiz">({{ adet }})</span></span><span>{{ tutar|tl }}</span></div>
+    <div class="bar" style="margin-bottom:6px"><i style="width:{{ (tutar / en * 100)|int }}%"></i></div>
+    {% endfor %}
+  </div>
+  <div class="panel">
+    <h2>Şirket Bazlı Üretim <small class="sessiz">(12 ay)</small></h2>
+    <table>{% for ad, adet, tutar in sirket_uretim %}<tr><td>{{ ad }}</td><td class="orta">{{ adet }}</td><td class="sag">{{ tutar|tl }}</td></tr>{% endfor %}</table>
+    <h3 style="margin-top:14px">Son İşlemler</h3>
+    <ul class="zaman-cizgisi">{% for l in son_loglar %}<li><b>{{ l.islem }}</b> <span class="sessiz">· {{ l.kullanici }} · {{ l.tarih|tarih }}</span>{% if l.aciklama %}<br><small>{{ l.aciklama }}</small>{% endif %}</li>{% endfor %}</ul>
+  </div>
+</div>
+{% endblock %}

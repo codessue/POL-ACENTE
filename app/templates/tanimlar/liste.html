@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block baslik %}{{ baslik }}{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Tanımlar · {{ baslik }}</h1></div>
+{% include "tanimlar/_nav.html" %}
+{% set kaynaklar = {'subeler': subeler, 'branslar': branslar} %}
+{% macro hucre(k, ad, tip, kaynak) %}
+  {% set v = k[ad] if k else none %}
+  {% if tip == 'bool' %}<select name="{{ ad }}"><option value="1" {{ 'selected' if (v if k else true) }}>Evet</option><option value="0" {{ 'selected' if k and not v }}>Hayır</option></select>
+  {% elif tip == 'select' %}<select name="{{ ad }}"><option value="">—</option>{% for n in kaynaklar[kaynak] %}<option value="{{ n.id }}" {{ 'selected' if v == n.id }}>{{ n.ad }}</option>{% endfor %}</select>
+  {% else %}<input name="{{ ad }}" value="{{ v if v is not none else '' }}" type="{{ 'number' if tip == 'number' else 'text' }}" {{ 'step=0.01' if tip == 'number' }}>{% endif %}
+{% endmacro %}
+<div class="panel tablo-kaydir"><table>
+<tr><th>#</th>{% for ad, etiket, tip, kaynak in alanlar %}<th>{{ etiket }}</th>{% endfor %}<th></th></tr>
+{% for k in kayitlar %}<tr><form method="post" action="/tanimlar/{{ tur }}" id="f{{ k.id }}"></form>
+<td>{{ k.id }}<input type="hidden" name="id" value="{{ k.id }}" form="f{{ k.id }}"></td>
+{% for ad, etiket, tip, kaynak in alanlar %}<td>{% if kullanici.rol != 'temsilci' %}{% set h = hucre(k, ad, tip, kaynak) %}{{ h|replace('<select', '<select form="f' ~ k.id ~ '"')|replace('<input', '<input form="f' ~ k.id ~ '"')|safe }}{% else %}{{ k[ad] if tip != 'select' else (k[ad.replace('_id','')].ad if k[ad.replace('_id','')] else '') }}{% endif %}</td>{% endfor %}
+<td class="satir-islem">{% if kullanici.rol != 'temsilci' %}<button class="btn kucuk" form="f{{ k.id }}">Kaydet</button><form method="post" action="/tanimlar/{{ tur }}/{{ k.id }}/sil" data-onay="Silinsin mi?"><button class="btn kucuk gri">✕</button></form>{% endif %}</td></tr>{% endfor %}
+{% if kullanici.rol != 'temsilci' %}<tr style="background:#f7f9fc"><form method="post" action="/tanimlar/{{ tur }}" id="fyeni"></form><td>yeni</td>
+{% for ad, etiket, tip, kaynak in alanlar %}<td>{% set h = hucre(none, ad, tip, kaynak) %}{{ h|replace('<select', '<select form="fyeni"')|replace('<input', '<input form="fyeni"')|safe }}</td>{% endfor %}
+<td><button class="btn kucuk ok" form="fyeni">Ekle</button></td></tr>{% endif %}
+</table></div>
+{% endblock %}

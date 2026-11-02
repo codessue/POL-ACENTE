@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% from "_makro.html" import nesne_secim, secim, kalan_rozet %}
+{% block baslik %}Toplu Hatırlatma{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Toplu Hatırlatma</h1><span class="sessiz">{{ policeler|length }} poliçe listelendi</span></div>
+<form class="panel filtre" method="get"><div class="alan"><label>Bitişe kalan gün ≤</label><input type="number" name="gun" value="{{ gun }}" data-oto-gonder></div>{{ nesne_secim('ana_brans_id','Branş',branslar,ana_brans_id,bos='Tümü',ekstra='data-oto-gonder') }}<noscript><button class="btn">Uygula</button></noscript></form>
+<form method="post" class="panel">
+  <div class="filtre">{{ secim('kanal','Kanal',KANALLAR,'SMS',bos=none) }}<div class="alan"><label>Şablon</label><select name="sablon_id" required>{% for s in sablonlar %}<option value="{{ s.id }}">{{ s.ad }} ({{ s.kanal }})</option>{% endfor %}</select></div>
+    <button class="btn" data-onay-btn>Seçilenlere Gönder</button><span class="kucuk sessiz">KVKK onayı veya iletişim bilgisi olmayanlar otomatik atlanır.</span></div>
+  <div class="tablo-kaydir"><table><tr><th><input type="checkbox" onclick="document.querySelectorAll('[name=police_id]').forEach(c=>c.checked=this.checked)" style="width:auto"></th><th>Bitiş</th><th>Kalan</th><th>Sigortalı</th><th>GSM</th><th>E-Posta</th><th>KVKK</th><th>Branş</th><th>Şirket</th><th>Poliçe</th><th class="sag">Brüt</th></tr>
+  {% for p in policeler %}<tr><td><input type="checkbox" name="police_id" value="{{ p.id }}" checked style="width:auto" {{ 'disabled' if not p.hesap.kvkk_onay }}></td><td>{{ p.bitis_tarihi|tarih }}</td><td>{{ kalan_rozet(p.kalan_gun) }}</td><td><a href="/hesaplar/{{ p.hesap_id }}">{{ p.hesap.unvan }}</a></td><td>{{ p.hesap.gsm }}</td><td>{{ p.hesap.eposta }}</td>
+  <td>{% if p.hesap.kvkk_onay %}<span class="rozet ok">✓</span>{% else %}<span class="rozet bad">✗</span>{% endif %}</td><td>{{ p.ana_brans.ad }}</td><td>{{ p.sirket.ad }}</td><td>{{ p.police_no }}</td><td class="sag">{{ p.brut_prim|tl }}</td></tr>{% endfor %}</table></div>
+</form>
+{% endblock %}

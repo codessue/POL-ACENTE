@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% from "_makro.html" import sayfalama, nesne_secim, secim %}
+{% block baslik %}Hesap Kartları{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Hesap Kartları</h1><div class="sag"><a class="btn ikincil" href="/hesaplar/disa-aktar?q={{ q }}&tip={{ tip }}&temsilci_id={{ temsilci_id or '' }}&kvkk={{ kvkk }}">Excel</a><a class="btn" href="/hesaplar/yeni">+ Yeni Hesap</a></div></div>
+<form class="panel filtre" method="get">
+  <div class="alan" style="flex:2"><label>Ara</label><input name="q" value="{{ q }}" placeholder="Ünvan, hesap kodu, TC/VKN, telefon, plaka"></div>
+  {{ secim('tip', 'Tip', ['Bireysel','Kurumsal'], tip, bos='Tümü') }}
+  {{ nesne_secim('temsilci_id', 'Temsilci', temsilciler, temsilci_id, 'ad_soyad', bos='Tümü') }}
+  {{ secim('kvkk', 'KVKK', [('var','Onaylı'),('yok','Onaysız')], kvkk, bos='Tümü') }}
+  <button class="btn">Filtrele</button><a class="btn gri" href="/hesaplar">Temizle</a>
+</form>
+<div class="panel tablo-kaydir">
+<table>
+<tr><th>Kod</th><th>Ünvan / Ad Soyad</th><th>Tip</th><th>TC / VKN</th><th>GSM</th><th>İl / İlçe</th><th>Temsilci</th><th class="orta">KVKK</th><th class="orta">Aktif Poliçe</th><th></th></tr>
+{% for h in kayitlar %}
+<tr><td class="nowrap">{{ h.hes_kod }}</td><td><a href="/hesaplar/{{ h.id }}"><b>{{ h.unvan }}</b></a></td><td><span class="rozet gri">{{ h.tip }}</span></td><td>{{ h.kimlik_no }}</td><td class="nowrap">{{ h.gsm }}</td>
+<td>{{ h.il or '' }}{% if h.ilce %} / {{ h.ilce }}{% endif %}</td><td>{{ h.temsilci.ad_soyad if h.temsilci else '' }}</td>
+<td class="orta">{% if h.kvkk_onay %}<span class="rozet ok">✓</span>{% else %}<span class="rozet bad">✗</span>{% endif %}</td>
+<td class="orta">{{ h.policeler|selectattr('durum','equalto','Aktif')|list|length }}</td>
+<td class="satir-islem"><a class="btn kucuk ikincil" href="/policeler/yeni?hesap_id={{ h.id }}">+ Poliçe</a></td></tr>
+{% else %}<tr><td colspan="10" class="sessiz">Kayıt bulunamadı.</td></tr>{% endfor %}
+</table>
+{{ sayfalama(sayfa, sayfa_sayisi, toplam, '/hesaplar?q=' ~ q ~ '&tip=' ~ tip ~ '&temsilci_id=' ~ (temsilci_id or '') ~ '&kvkk=' ~ kvkk ~ '&') }}
+</div>
+{% endblock %}

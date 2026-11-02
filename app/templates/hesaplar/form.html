@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% from "_makro.html" import alan, tarih_alan, secim, nesne_secim, metin %}
+{% block baslik %}{{ 'Hesap Düzenle' if h and h.id else 'Yeni Hesap Kartı' }}{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>{{ 'Hesap Kartı Düzenle' if h and h.id else 'Yeni Hesap Kartı' }}</h1>{% if h and h.id %}<a class="btn gri kucuk" href="/hesaplar/{{ h.id }}">← Karta dön</a>{% endif %}</div>
+<form method="post" class="panel">
+  <h2>Kimlik Bilgileri</h2>
+  <div class="form-grid">
+    {{ alan('hes_kod', 'Hesap Kodu', (h.hes_kod if h else onerilen_kod), placeholder=onerilen_kod) }}
+    {{ secim('tip', 'Hesap Tipi', ['Bireysel','Kurumsal'], (h.tip if h else 'Bireysel'), bos=none) }}
+    {{ alan('unvan', 'Ünvan / Ad Soyad', h.unvan if h else '', gerekli=True, sinif='genis') }}
+    {{ alan('tc_no', 'TC Kimlik No', h.tc_no if h else '', ekstra='maxlength="11" inputmode="numeric"') }}
+    {{ alan('vergi_no', 'Vergi No', h.vergi_no if h else '', ekstra='maxlength="11" inputmode="numeric"') }}
+    {{ alan('vergi_dairesi', 'Vergi Dairesi', h.vergi_dairesi if h else '') }}
+    {{ tarih_alan('dogum_tarihi', 'Doğum Tarihi', h.dogum_tarihi if h else none) }}
+    {{ secim('cinsiyet', 'Cinsiyet', ['Kadın','Erkek'], h.cinsiyet if h else none) }}
+    {{ alan('meslek', 'Meslek / Sektör', h.meslek if h else '') }}
+  </div>
+  <h2 style="margin-top:18px">İletişim & Adres</h2>
+  <div class="form-grid">
+    {% if not (h and h.id) %}{{ alan('gsm', 'GSM', '', placeholder='05xx xxx xx xx') }}{{ alan('eposta', 'E-Posta', '', tip='email') }}{% endif %}
+    {{ alan('il', 'İl', h.il if h else '') }}
+    {{ alan('ilce', 'İlçe', h.ilce if h else '') }}
+    {{ alan('adres', 'Adres', h.adres if h else '', sinif='genis') }}
+  </div>
+  <h2 style="margin-top:18px">Portföy</h2>
+  <div class="form-grid">
+    {{ nesne_secim('temsilci_id', 'Temsilci', temsilciler, h.temsilci_id if h else (kullanici.temsilci_id), 'ad_soyad') }}
+    {{ nesne_secim('sube_id', 'Şube', subeler, h.sube_id if h else none) }}
+    {{ nesne_secim('tali_id', 'Tali Acente', taliler, h.tali_id if h else none) }}
+    {{ alan('grup', 'Müşteri Grubu', h.grup if h else '', placeholder='Örn: VIP, Kurumsal, Aile') }}
+    {{ alan('referans', 'Referans', h.referans if h else '') }}
+  </div>
+  <h2 style="margin-top:18px">KVKK</h2>
+  <div class="form-grid">
+    <div class="alan"><label>Açık Rıza</label><label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" name="kvkk_onay" value="1" style="width:auto" {{ 'checked' if h and h.kvkk_onay }}> Müşteri KVKK aydınlatma/açık rıza onayı verdi</label></div>
+    {{ secim('kvkk_kanal', 'Onay Kanalı', ['Islak İmza','SMS','E-Posta','Web Formu','Sözlü'], h.kvkk_kanal if h else 'Islak İmza') }}
+    {% if h and h.kvkk_tarih %}<div class="alan"><label>Onay Tarihi</label><input value="{{ h.kvkk_tarih|tarih }}" disabled></div>{% endif %}
+    {{ metin('notlar', 'Notlar', h.notlar if h else '') }}
+  </div>
+  <div style="margin-top:16px;display:flex;gap:8px"><button class="btn">Kaydet</button><a class="btn gri" href="{{ '/hesaplar/' ~ h.id if h and h.id else '/hesaplar' }}">Vazgeç</a></div>
+</form>
+{% endblock %}

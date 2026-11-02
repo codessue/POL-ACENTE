@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% from "_makro.html" import sayfalama, nesne_secim, durum_rozet %}
+{% block baslik %}Tahsilat{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Tahsilat Takibi</h1><div class="sag"><a class="btn ikincil" href="/tahsilat/disa-aktar?gorunum={{ gorunum }}">Excel</a></div></div>
+<div class="sekme">{% for k_, ad in [('vadesi','Vadesi Geçmiş'),('yaklasan','15 Gün İçinde'),('tum','Tüm Açık Taksitler'),('tahsilatlar','Tahsilat Geçmişi')] %}<a href="?gorunum={{ k_ }}" class="{{ 'aktif' if gorunum == k_ }}">{{ ad }}</a>{% endfor %}</div>
+<form class="panel filtre" method="get"><input type="hidden" name="gorunum" value="{{ gorunum }}">
+{% if gorunum == 'tahsilatlar' %}<div class="alan"><label>Başlangıç</label><input type="date" name="t1" value="{{ t1 }}"></div><div class="alan"><label>Bitiş</label><input type="date" name="t2" value="{{ t2 }}"></div>
+{% else %}{{ nesne_secim('temsilci_id','Temsilci',temsilciler,temsilci_id,'ad_soyad',bos='Tümü') }}{% endif %}<button class="btn">Uygula</button>
+<span class="sessiz" style="margin-left:auto">Sayfa toplamı: <b>{{ para_toplam|tl }} ₺</b></span></form>
+<div class="panel tablo-kaydir">
+{% if gorunum == 'tahsilatlar' %}
+<table><tr><th>Tarih</th><th>Sigortalı</th><th>Poliçe</th><th>Şekil</th><th>Makbuz</th><th>Açıklama</th><th class="sag">Tutar</th><th>Durum</th><th>Kullanıcı</th><th></th></tr>
+{% for t in kayitlar %}<tr><td>{{ t.tarih|tarih }}</td><td><a href="/hesaplar/{{ t.hesap_id }}">{{ t.hesap.unvan }}</a></td><td><a href="/policeler/{{ t.police_id }}">{{ t.police.police_no }}</a></td><td>{{ t.tahsilat_sekli }}</td><td>{{ t.makbuz_no or '' }}</td><td>{{ t.aciklama or '' }}</td><td class="sag">{{ t.tutar|tl }}</td><td>{{ durum_rozet(t.durum) }}</td><td>{{ t.kullanici }}</td>
+<td>{% if t.durum == 'Tahsil Edildi' and kullanici.rol != 'temsilci' %}<form method="post" action="/tahsilat/{{ t.id }}/iade" data-onay="İade olarak işaretlensin mi?"><button class="btn kucuk gri">İade</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="10" class="sessiz">Kayıt yok.</td></tr>{% endfor %}</table>
+{% else %}
+<table><tr><th>Vade</th><th>Gecikme</th><th>Taksit</th><th>Sigortalı</th><th>GSM</th><th>Poliçe</th><th>Şirket</th><th>Temsilci</th><th class="sag">Tutar</th><th>Tahsil</th></tr>
+{% for t in kayitlar %}<tr><td class="nowrap">{{ t.vade|tarih }}</td><td>{% set g = (bugun() - t.vade).days %}{% if g > 0 %}<span class="rozet bad">{{ g }} gün</span>{% else %}<span class="rozet gri">{{ -g }} gün sonra</span>{% endif %}</td><td>{{ t.sira }}/{{ t.police.taksit_sayisi }}</td>
+<td><a href="/hesaplar/{{ t.police.hesap_id }}">{{ t.police.hesap.unvan }}</a></td><td>{{ t.police.hesap.gsm }}</td><td><a href="/policeler/{{ t.police_id }}">{{ t.police.police_no }}</a></td><td>{{ t.police.sirket.ad }}</td><td>{{ t.police.temsilci.ad_soyad if t.police.temsilci else '' }}</td><td class="sag"><b>{{ t.tutar|tl }}</b></td>
+<td><form method="post" action="/tahsilat/taksit/{{ t.id }}/ode" class="satir-islem"><select name="tahsilat_sekli" style="width:120px">{% for s in SEKILLER %}<option>{{ s }}</option>{% endfor %}</select><input name="makbuz_no" placeholder="Makbuz" style="width:90px"><button class="btn kucuk ok">Tahsil Et</button></form></td></tr>
+{% else %}<tr><td colspan="10" class="sessiz">Açık taksit yok.</td></tr>{% endfor %}</table>
+{% endif %}
+{{ sayfalama(sayfa, sayfa_sayisi, toplam, '/tahsilat?gorunum=' ~ gorunum ~ '&') }}
+</div>
+{% endblock %}

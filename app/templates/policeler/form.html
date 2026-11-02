@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% from "_makro.html" import alan, tarih_alan, secim, nesne_secim, metin, hesap_arama %}
+{% block baslik %}{{ 'Poliçe Düzenle' if p and p.id else 'Yeni Poliçe' }}{% endblock %}
+{% block icerik %}
+{% set d = p or onceki %}
+{% set yenileme = (onceki is not none) or (surec is not none) %}
+<div class="baslik"><h1>{{ 'Poliçe Düzenle' if p and p.id else ('Poliçe Yenileme' if yenileme else 'Yeni Poliçe Girişi') }}</h1>
+{% if onceki %}<span class="rozet info">Önceki: {{ onceki.police_no }} · {{ onceki.sirket.ad }} · bitiş {{ onceki.bitis_tarihi|tarih }}</span>{% endif %}
+{% if surec %}<a class="rozet warn" href="/yenileme/{{ surec.id }}">Süreç #{{ surec.id }} · {{ surec.pozisyon }}</a>{% endif %}</div>
+<form method="post" class="panel">
+  {% if surec %}<input type="hidden" name="surec_id" value="{{ surec.id }}">{% endif %}
+  {% if onceki and not surec %}<input type="hidden" name="onceki_police_id" value="{{ onceki.id }}">{% endif %}
+  <h2>Sigortalı</h2>
+  <div class="form-grid">
+    {% if hesap %}<input type="hidden" name="hesap_id" value="{{ hesap.id }}"><div class="alan genis"><label>Hesap Kartı</label><div><a href="/hesaplar/{{ hesap.id }}"><b>{{ hesap.unvan }}</b></a> <span class="rozet gri">{{ hesap.hes_kod }}</span> {{ hesap.gsm }} {% if not (p and p.id) %}· <a href="/policeler/yeni">değiştir</a>{% endif %}</div></div>
+    {% else %}{{ hesap_arama() }}{% endif %}
+  </div>
+  <h2 style="margin-top:18px">Poliçe Bilgileri</h2>
+  {% set st = secili_teklif %}
+  <div class="form-grid">
+    {{ nesne_secim('sirket_id','Sigorta Şirketi',sirketler,(st.sirket_id if st else (d.sirket_id if d else none)),gerekli=True) }}
+    {{ nesne_secim('ana_brans_id','Ana Branş',branslar,(d.ana_brans_id if d else (surec.ana_brans_id if surec else none)),gerekli=True) }}
+    {{ nesne_secim('ara_brans_id','Ara Branş',ara_branslar,d.ara_brans_id if d else none) }}
+    {{ alan('police_no','Poliçe No',(p.police_no if p else ''),gerekli=True) }}
+    {{ alan('zeyl_no','Zeyl No',(p.zeyl_no if p else 0),tip='number') }}
+    {{ alan('yenileme_no','Yenileme No',(p.yenileme_no if p else ((onceki.yenileme_no or 0) + 1 if onceki else 0)),tip='number') }}
+    {{ tarih_alan('tanzim_tarihi','Tanzim Tarihi',(p.tanzim_tarihi if p else bugun()),gerekli=True) }}
+    {{ tarih_alan('baslama_tarihi','Başlama Tarihi',(p.baslama_tarihi if p else (onceki.bitis_tarihi if onceki else bugun())),gerekli=True) }}
+    {{ tarih_alan('bitis_tarihi','Bitiş Tarihi',(p.bitis_tarihi if p else (onceki.bitis_tarihi.replace(year=onceki.bitis_tarihi.year + 1) if onceki else bugun().replace(year=bugun().year + 1))),gerekli=True) }}
+    {{ alan('brut_prim','Brüt Prim',(st.brut_prim if st else (p.brut_prim if p else '')),ekstra='data-brut inputmode="decimal"',gerekli=True) }}
+    {{ alan('net_prim','Net Prim',(st.net_prim if st else (p.net_prim if p else '')),ekstra='data-net inputmode="decimal"') }}
+    {{ alan('komisyon','Komisyon',(st.komisyon if st else (p.komisyon if p else '')),ekstra='data-komisyon inputmode="decimal"') }}
+    {{ secim('para_birimi','Para Birimi',['TRY','USD','EUR'],(p.para_birimi if p else 'TRY'),bos=none) }}
+    {{ secim('odeme_sekli','Ödeme Şekli',ODEME,(st.odeme_tipi if st else (p.odeme_sekli if p else 'Peşin')),bos=none) }}
+    {{ alan('taksit_sayisi','Taksit Sayısı',(st.taksit_sayisi if st else (p.taksit_sayisi if p else 1)),tip='number') }}
+  </div>
+  <h2 style="margin-top:18px">Riziko</h2>
+  <div class="form-grid">
+    {% if hesap and hesap.araclar %}<div class="alan"><label>Araç (karttan)</label><select name="arac_id"><option value="">—</option>{% for a in hesap.araclar %}<option value="{{ a.id }}" {{ 'selected' if d and d.arac_id == a.id }}>{{ a.plaka }} · {{ a.marka or '' }} {{ a.model or '' }}</option>{% endfor %}</select></div>{% endif %}
+    {{ alan('plaka','Plaka',(d.plaka if d else ''),ekstra='data-plaka',placeholder='34ABC123') }}
+    {{ alan('riziko_adresi','Riziko Adresi',(d.riziko_adresi if d else (hesap.adres if hesap else '')),sinif='genis') }}
+  </div>
+  <h2 style="margin-top:18px">Portföy</h2>
+  <div class="form-grid">
+    {{ nesne_secim('temsilci_id','Temsilci',temsilciler,(d.temsilci_id if d else (hesap.temsilci_id if hesap else kullanici.temsilci_id)),'ad_soyad') }}
+    {{ nesne_secim('sube_id','Şube',subeler,(d.sube_id if d else (hesap.sube_id if hesap else none))) }}
+    {{ nesne_secim('tali_id','Tali Acente',taliler,(d.tali_id if d else (hesap.tali_id if hesap else none))) }}
+    {% if p and p.id %}{{ secim('durum','Durum',DURUMLAR,p.durum,bos=none) }}{% endif %}
+    {{ metin('aciklama','Açıklama',(p.aciklama if p else '')) }}
+  </div>
+  <div style="margin-top:16px;display:flex;gap:8px"><button class="btn">Kaydet</button><a class="btn gri" href="{{ '/policeler/' ~ p.id if p and p.id else '/policeler' }}">Vazgeç</a></div>
+</form>
+{% endblock %}

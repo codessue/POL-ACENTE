@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% from "_makro.html" import alan, secim, nesne_secim %}
+{% block baslik %}Şablonlar{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Mesaj Şablonları & Hatırlatma Kuralları</h1><div class="sag"><a class="btn gri kucuk" href="/mesajlar">← Mesajlar</a></div></div>
+<div class="grid g2">
+<div class="panel"><h2>Şablonlar</h2>
+<p class="kucuk sessiz">Değişkenler: <code>{unvan} {police_no} {bitis} {baslama} {plaka} {brut} {sirket} {brans} {acente}</code></p>
+{% for s in sablonlar %}<details style="margin-bottom:8px"><summary>{{ s.ad }} <span class="rozet gri">{{ s.kanal }}</span>{% if not s.aktif %} <span class="rozet bad">pasif</span>{% endif %}</summary>
+<form method="post" action="/mesajlar/sablonlar" style="margin-top:8px"><input type="hidden" name="id" value="{{ s.id }}"><div class="form-grid">{{ alan('ad','Ad',s.ad,gerekli=True) }}{{ secim('kanal','Kanal',KANALLAR,s.kanal,bos=none) }}{{ alan('konu','Konu (e-posta)',s.konu or '',sinif='genis') }}
+<div class="alan genis"><label>İçerik</label><textarea name="icerik" rows="4" required>{{ s.icerik }}</textarea></div>{{ secim('aktif','Aktif',[('1','Evet'),('0','Hayır')],'1' if s.aktif else '0',bos=none) }}</div>
+<div class="satir-islem" style="margin-top:8px"><button class="btn kucuk">Kaydet</button></div></form>
+<form method="post" action="/mesajlar/sablonlar/{{ s.id }}/sil" data-onay="Şablon silinsin mi?" style="margin-top:4px"><button class="btn kucuk tehlike">Sil</button></form></details>{% endfor %}
+<h3 style="margin-top:14px">Yeni Şablon</h3>
+<form method="post" action="/mesajlar/sablonlar"><div class="form-grid">{{ alan('ad','Ad','',gerekli=True) }}{{ secim('kanal','Kanal',KANALLAR,'SMS',bos=none) }}{{ alan('konu','Konu (e-posta)','',sinif='genis') }}<div class="alan genis"><label>İçerik</label><textarea name="icerik" rows="4" required></textarea></div></div><button class="btn" style="margin-top:8px">Ekle</button></form></div>
+
+<div class="panel"><h2>Otomatik Hatırlatma Kuralları</h2>
+<p class="kucuk sessiz">Kural: bitişine <b>N gün</b> kalan aktif poliçelere, KVKK onayı olan müşterilere, seçilen şablonla bir kez ileti üretir. "Kuralları Çalıştır" butonu veya zamanlanmış görev (<code>python -m app.gorevler hatirlat</code>) ile tetiklenir.</p>
+<table><tr><th>Kural</th><th>Gün</th><th>Kanal</th><th>Şablon</th><th>Branş</th><th>Aktif</th><th></th></tr>
+{% for r in kurallar %}<tr><td>{{ r.ad }}</td><td>{{ r.gun_once }}</td><td>{{ r.kanal }}</td><td>{{ r.sablon.ad }}</td><td>{{ r.ana_brans.ad if r.ana_brans else 'Tümü' }}</td><td>{{ '✓' if r.aktif else '✗' }}</td>
+<td><form method="post" action="/mesajlar/kurallar/{{ r.id }}/sil" data-onay="Kural silinsin mi?"><button class="btn kucuk gri">✕</button></form></td></tr>{% else %}<tr><td colspan="7" class="sessiz">Kural yok.</td></tr>{% endfor %}</table>
+<h3 style="margin-top:14px">Yeni Kural</h3>
+<form method="post" action="/mesajlar/kurallar"><div class="form-grid">{{ alan('ad','Kural Adı','',gerekli=True) }}{{ alan('gun_once','Kaç gün önce','30',tip='number') }}{{ secim('kanal','Kanal',KANALLAR,'SMS',bos=none) }}
+<div class="alan"><label>Şablon</label><select name="sablon_id" required>{% for s in sablonlar %}<option value="{{ s.id }}">{{ s.ad }}</option>{% endfor %}</select></div>{{ nesne_secim('ana_brans_id','Branş',branslar,none,bos='Tüm branşlar') }}</div><button class="btn" style="margin-top:8px">Ekle</button></form></div>
+</div>
+{% endblock %}

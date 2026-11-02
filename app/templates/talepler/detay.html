@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% from "_makro.html" import durum_rozet, secim, alan, dosya_formu, dosya_listesi %}
+{% block baslik %}Talep #{{ t.id }}{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Talep #{{ t.id }} · {{ t.talep_turu }}</h1>{{ durum_rozet(t.durum) }}<div class="sag"><a class="btn gri kucuk" href="/talepler">← Liste</a></div></div>
+<div class="grid g2">
+  <div class="panel"><dl class="kv"><dt>Müşteri</dt><dd><a href="/hesaplar/{{ t.hesap_id }}"><b>{{ t.hesap.unvan }}</b></a> · {{ t.hesap.gsm }}</dd>
+    {% if t.police %}<dt>Poliçe</dt><dd><a href="/policeler/{{ t.police_id }}">{{ t.police.police_no }}</a> · {{ t.police.ana_brans.ad }} · {{ t.police.sirket.ad }}</dd>{% endif %}
+    <dt>Açılış</dt><dd>{{ t.olusturma|tarih }} · {{ t.olusturan }}</dd><dt>Temsilci</dt><dd>{{ t.temsilci.ad_soyad if t.temsilci else '—' }}</dd>
+    <dt>Açıklama</dt><dd style="white-space:pre-wrap">{{ t.aciklama }}</dd>{% if t.durum_aciklama %}<dt>Son Durum</dt><dd>{{ t.durum_aciklama }}</dd>{% endif %}{% if t.kapanis %}<dt>Kapanış</dt><dd>{{ t.kapanis|tarih }}</dd>{% endif %}</dl>
+    <h3 style="margin-top:14px">Dosyalar</h3>{{ dosya_formu('talep', t.id) }}{{ dosya_listesi(dosyalar) }}</div>
+  <div class="panel"><h2>Hareket Ekle</h2>
+    <form method="post" action="/talepler/{{ t.id }}/hareket"><div class="form-grid">{{ secim('durum','Durum',DURUMLAR,t.durum,bos=none) }}{{ alan('aciklama','Açıklama','',sinif='genis') }}</div><button class="btn" style="margin-top:8px">Kaydet</button></form>
+    <h3 style="margin-top:14px">Hareketler</h3><ul class="zaman-cizgisi">{% for h in t.hareketler %}<li>{{ durum_rozet(h.durum) }} {{ h.aciklama }}<br><small class="sessiz">{{ h.kullanici }} · {{ h.tarih|tarih }}</small></li>{% endfor %}</ul></div>
+</div>
+{% endblock %}

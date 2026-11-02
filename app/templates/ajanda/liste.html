@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% from "_makro.html" import nesne_secim, secim, durum_rozet %}
+{% block baslik %}Ajanda{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Ajanda</h1><div class="sag"><a class="btn" href="/ajanda/yeni">+ Görev / Randevu</a></div></div>
+<form class="panel filtre" method="get">
+  {{ secim('gorunum','Görünüm',[('gun','Gün'),('hafta','Hafta'),('ay','Ay'),('tum','Tümü')],gorunum,bos=none,ekstra='data-oto-gonder') }}
+  <div class="alan"><label>Tarih</label><input type="date" name="baslangic" value="{{ bas.isoformat() }}" data-oto-gonder></div>
+  {{ nesne_secim('atanan_id','Kullanıcı',kullanicilar,atanan_id,'ad_soyad',bos='Herkes',ekstra='data-oto-gonder') }}
+  {{ secim('durum','Durum',['Açık','Tamamlandı','İptal'],durum,bos='Tümü',ekstra='data-oto-gonder') }}
+  <a class="btn gri" href="?gorunum={{ gorunum }}&baslangic={{ onceki }}&atanan_id={{ atanan_id or '' }}&durum={{ durum }}">‹</a><a class="btn gri" href="?gorunum={{ gorunum }}&atanan_id={{ atanan_id or '' }}&durum={{ durum }}">Bugün</a><a class="btn gri" href="?gorunum={{ gorunum }}&baslangic={{ sonraki }}&atanan_id={{ atanan_id or '' }}&durum={{ durum }}">›</a>
+</form>
+{% if geciken %}<div class="flash hata"><b>{{ geciken|length }} gecikmiş görev:</b> {% for g in geciken[:8] %}<a href="/ajanda/{{ g.id }}/duzenle">{{ g.baslik }}</a> ({{ g.tarih|tarih }}){{ ', ' if not loop.last }}{% endfor %}</div>{% endif %}
+{% if gunler %}
+<div class="grid" style="grid-template-columns:repeat({{ gunler|length }},1fr)">
+{% for g, liste in gunler %}
+<div class="panel" style="padding:10px;{{ 'border-color:var(--brand-2)' if g == bugun() }}"><h3>{{ ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'][g.weekday()] }} <small class="sessiz">{{ g|tarih }}</small></h3>
+{% for x in liste %}<div class="kartcik" style="background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin-bottom:6px;font-size:12.5px;{{ 'opacity:.55' if x.durum != 'Açık' }}">
+  <b>{{ x.saat or '' }} {{ x.baslik }}</b> <span class="rozet gri">{{ x.tip }}</span><br>{% if x.hesap %}<a href="/hesaplar/{{ x.hesap_id }}">{{ x.hesap.unvan }}</a><br>{% endif %}<small class="sessiz">{{ x.atanan.ad_soyad if x.atanan else '' }}</small>
+  <div class="satir-islem" style="margin-top:4px">{% if x.durum == 'Açık' %}<form method="post" action="/ajanda/{{ x.id }}/durum"><input type="hidden" name="durum" value="Tamamlandı"><button class="btn kucuk ok">✓</button></form>{% endif %}<a class="btn kucuk gri" href="/ajanda/{{ x.id }}/duzenle">✎</a></div></div>
+{% else %}<p class="sessiz kucuk">—</p>{% endfor %}</div>
+{% endfor %}</div>
+{% else %}
+<div class="panel tablo-kaydir"><table><tr><th>Tarih</th><th>Saat</th><th>Tip</th><th>Başlık</th><th>Hesap</th><th>Atanan</th><th>Durum</th><th></th></tr>
+{% for x in kayitlar %}<tr><td>{{ x.tarih|tarih }}</td><td>{{ x.saat or '' }}</td><td>{{ x.tip }}</td><td>{{ x.baslik }}<br><small class="sessiz">{{ x.aciklama or '' }}</small></td><td>{% if x.hesap %}<a href="/hesaplar/{{ x.hesap_id }}">{{ x.hesap.unvan }}</a>{% endif %}</td><td>{{ x.atanan.ad_soyad if x.atanan else '' }}</td><td>{{ durum_rozet(x.durum) }}</td>
+<td class="satir-islem">{% if x.durum == 'Açık' %}<form method="post" action="/ajanda/{{ x.id }}/durum"><input type="hidden" name="durum" value="Tamamlandı"><button class="btn kucuk ok">Tamamla</button></form>{% endif %}<a class="btn kucuk gri" href="/ajanda/{{ x.id }}/duzenle">Düzenle</a></td></tr>{% else %}<tr><td colspan="8" class="sessiz">Kayıt yok.</td></tr>{% endfor %}</table></div>
+{% endif %}
+{% endblock %}

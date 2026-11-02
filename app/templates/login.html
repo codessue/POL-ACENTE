@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Giriş · {{ APP_NAME }}</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="login-kutu">
+  <h1>{{ APP_NAME }}</h1>
+  <p class="sessiz" style="text-align:center;margin-top:-8px">Açık kaynak sigorta acentesi yönetim sistemi</p>
+  {% if hata %}<div class="flash hata">{{ hata }}</div>{% endif %}
+  <form method="post" action="/login">
+    <input type="hidden" name="sonraki" value="{{ sonraki }}">
+    <div class="alan"><label>Kullanıcı Adı</label><input name="kullanici_adi" autofocus required autocomplete="username"></div>
+    <div class="alan"><label>Parola</label><input name="sifre" type="password" required autocomplete="current-password"></div>
+    <button class="btn" style="width:100%">Giriş</button>
+  </form>
+  <p class="yardim" style="text-align:center;margin-top:14px">İlk kurulumda kullanıcı adı <b>admin</b>, parola <b>admin</b>. Girdikten sonra değiştirin.</p>
+</div>
+</body></html>

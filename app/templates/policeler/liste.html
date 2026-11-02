@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% from "_makro.html" import sayfalama, nesne_secim, secim, durum_rozet, kalan_rozet %}
+{% block baslik %}Poliçeler{% endblock %}
+{% block icerik %}
+{% set qs = request.url.query %}
+<div class="baslik"><h1>Poliçeler</h1><div class="sag">
+  {% if kullanici.rol != 'temsilci' %}<a class="btn ikincil" href="/policeler/ice-aktar">İçe Aktar</a>{% endif %}
+  <a class="btn ikincil" href="/policeler/disa-aktar?{{ qs }}">Excel</a><a class="btn" href="/policeler/yeni">+ Yeni Poliçe</a></div></div>
+<form class="panel filtre" method="get">
+  <div class="alan" style="flex:2"><label>Ara</label><input name="q" value="{{ f.q or '' }}" placeholder="Poliçe no, plaka, sigortalı, TC/VKN"></div>
+  {{ nesne_secim('sirket_id','Şirket',sirketler,f.sirket_id|int if f.sirket_id else none,bos='Tümü') }}
+  {{ nesne_secim('ana_brans_id','Branş',branslar,f.ana_brans_id|int if f.ana_brans_id else none,bos='Tümü') }}
+  {{ nesne_secim('temsilci_id','Temsilci',temsilciler,f.temsilci_id|int if f.temsilci_id else none,'ad_soyad',bos='Tümü') }}
+  {{ secim('durum','Durum',DURUMLAR,f.durum,bos='Tümü') }}
+  <div class="alan"><label>Bitiş (başlangıç)</label><input type="date" name="bitis1" value="{{ f.bitis1 or '' }}"></div>
+  <div class="alan"><label>Bitiş (son)</label><input type="date" name="bitis2" value="{{ f.bitis2 or '' }}"></div>
+  <div class="alan"><label>Tanzim (başlangıç)</label><input type="date" name="tanzim1" value="{{ f.tanzim1 or '' }}"></div>
+  <div class="alan"><label>Tanzim (son)</label><input type="date" name="tanzim2" value="{{ f.tanzim2 or '' }}"></div>
+  {{ secim('sirala','Sırala',[('bitis','Bitiş tarihi'),('tanzim','Tanzim (yeni→eski)'),('prim','Prim (büyük→küçük)')],f.sirala or 'bitis',bos=none) }}
+  <button class="btn">Filtrele</button><a class="btn gri" href="/policeler">Temizle</a>
+  <span class="kucuk sessiz">Hızlı: <a href="/policeler?on=7">7 gün</a> · <a href="/policeler?on=30">30 gün</a> · <a href="/policeler?on=60">60 gün</a> içinde bitecek</span>
+</form>
+<div class="panel tablo-kaydir">
+<table><tr><th>Durum</th><th>Poliçe No</th><th>Şirket</th><th>Branş</th><th>Sigortalı</th><th>Plaka</th><th>Tanzim</th><th>Bitiş</th><th>Kalan</th><th class="sag">Brüt Prim</th><th class="sag">Komisyon</th><th>Temsilci</th><th></th></tr>
+{% for p in kayitlar %}<tr><td>{{ durum_rozet(p.durum) }}</td><td><a href="/policeler/{{ p.id }}"><b>{{ p.police_no }}</b></a>{% if p.zeyl_no %}<small class="sessiz"> Z{{ p.zeyl_no }}</small>{% endif %}</td><td>{{ p.sirket.ad }}</td><td>{{ p.ana_brans.ad }}</td>
+<td><a href="/hesaplar/{{ p.hesap_id }}">{{ p.hesap.unvan }}</a></td><td>{{ p.plaka or '' }}</td><td class="nowrap">{{ p.tanzim_tarihi|tarih }}</td><td class="nowrap">{{ p.bitis_tarihi|tarih }}</td><td>{% if p.durum == 'Aktif' %}{{ kalan_rozet(p.kalan_gun) }}{% endif %}</td>
+<td class="sag">{{ p.brut_prim|tl }}</td><td class="sag">{{ p.komisyon|tl }}</td><td>{{ p.temsilci.ad_soyad if p.temsilci else '' }}</td>
+<td class="satir-islem">{% if p.durum == 'Aktif' and p.kalan_gun <= 60 %}<a class="btn kucuk" href="/policeler/yeni?onceki_id={{ p.id }}">Yenile</a>{% endif %}</td></tr>
+{% else %}<tr><td colspan="13" class="sessiz">Kayıt bulunamadı.</td></tr>{% endfor %}
+{% if kayitlar %}<tr><th colspan="9" class="sag">Sayfa toplamı</th><th class="sag">{{ toplam_brut|tl }}</th><th colspan="3"></th></tr>{% endif %}
+</table>
+{{ sayfalama(sayfa, sayfa_sayisi, toplam, '/policeler?' ~ qs|replace('sayfa=' ~ sayfa, '') ~ '&') }}
+</div>
+{% endblock %}

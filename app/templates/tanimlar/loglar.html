@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% from "_makro.html" import sayfalama %}
+{% block baslik %}İşlem Logları{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Tanımlar · İşlem Logları</h1></div>
+{% include "tanimlar/_nav.html" %}
+<form class="panel filtre" method="get"><div class="alan" style="flex:1"><input name="q" value="{{ q }}" placeholder="İşlem, açıklama veya kullanıcı ara"></div><button class="btn">Ara</button></form>
+<div class="panel tablo-kaydir"><table><tr><th>Tarih</th><th>Kullanıcı</th><th>İşlem</th><th>Yer</th><th>Açıklama</th></tr>
+{% for l in kayitlar %}<tr><td class="nowrap">{{ l.tarih|tarih }}</td><td>{{ l.kullanici }}</td><td>{{ l.islem }}</td><td>{% if l.yer == 'hesap' and l.yer_id %}<a href="/hesaplar/{{ l.yer_id }}">hesap #{{ l.yer_id }}</a>{% elif l.yer == 'police' and l.yer_id %}<a href="/policeler/{{ l.yer_id }}">poliçe #{{ l.yer_id }}</a>{% elif l.yer == 'yenileme' and l.yer_id %}<a href="/yenileme/{{ l.yer_id }}">süreç #{{ l.yer_id }}</a>{% else %}{{ l.yer or '' }}{% endif %}</td><td>{{ l.aciklama or '' }}</td></tr>{% endfor %}</table>
+{{ sayfalama(sayfa, sayfa_sayisi, toplam, '/tanimlar/loglar?q=' ~ q ~ '&') }}</div>
+{% endblock %}

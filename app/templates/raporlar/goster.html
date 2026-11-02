@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block baslik %}{{ ad }}{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>{{ ad }}</h1><span class="sessiz">{{ t1|tarih }} — {{ t2|tarih }}</span>
+  <div class="sag"><a class="btn ikincil kucuk" href="?t1={{ t1 }}&t2={{ t2 }}&bicim=xlsx">Excel</a><a class="btn ikincil kucuk" href="?t1={{ t1 }}&t2={{ t2 }}&bicim=csv">CSV</a><button class="btn kucuk gri" onclick="window.print()">Yazdır</button><a class="btn gri kucuk" href="/raporlar?t1={{ t1 }}&t2={{ t2 }}">← Raporlar</a></div></div>
+<form class="panel filtre" method="get"><div class="alan"><label>Başlangıç</label><input type="date" name="t1" value="{{ t1.isoformat() }}"></div><div class="alan"><label>Bitiş</label><input type="date" name="t2" value="{{ t2.isoformat() }}"></div><button class="btn">Uygula</button>
+<span style="margin-left:auto" class="kucuk">{% for k_, a in RAPORLAR %}<a href="/raporlar/{{ k_ }}?t1={{ t1 }}&t2={{ t2 }}" class="{{ 'rozet info' if k_ == kod else 'rozet gri' }}">{{ a }}</a> {% endfor %}</span></form>
+<div class="panel tablo-kaydir"><table><tr>{% for k_ in kolon %}<th class="{{ 'sag' if not loop.first }}">{{ k_ }}</th>{% endfor %}</tr>
+{% for r in satir %}<tr>{% for v in r %}<td class="{{ 'sag' if not loop.first }}">{% if v is number and not loop.first %}{{ v|tl if (v is not integer) else v }}{% elif v.__class__.__name__ == 'date' %}{{ v|tarih }}{% else %}{{ v if v is not none else '' }}{% endif %}</td>{% endfor %}</tr>
+{% else %}<tr><td colspan="{{ kolon|length }}" class="sessiz">Bu aralıkta veri yok.</td></tr>{% endfor %}
+{% if satir and toplamlar %}<tr>{% for t in toplamlar %}<th class="{{ 'sag' if not loop.first }}">{% if loop.first %}Toplam{% elif t is not none %}{{ t|tl }}{% endif %}</th>{% endfor %}</tr>{% endif %}
+</table></div>
+{% endblock %}

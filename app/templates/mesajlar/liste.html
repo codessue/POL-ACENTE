@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% from "_makro.html" import sayfalama, secim, durum_rozet %}
+{% block baslik %}Mesajlar{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Mesaj Geçmişi</h1><div class="sag"><a class="btn ikincil" href="/mesajlar/sablonlar">Şablonlar & Kurallar</a><a class="btn" href="/mesajlar/toplu">Toplu Hatırlatma</a>
+{% if kullanici.rol != 'temsilci' %}<form method="post" action="/mesajlar/kurallari-calistir"><button class="btn ikincil">Kuralları Çalıştır</button></form>{% endif %}</div></div>
+<form class="panel filtre" method="get">{{ secim('kanal','Kanal',KANALLAR,kanal,bos='Tümü',ekstra='data-oto-gonder') }}{{ secim('durum','Durum',['Gönderildi','Hata','Kuyrukta'],durum,bos='Tümü',ekstra='data-oto-gonder') }}<noscript><button class="btn">Uygula</button></noscript></form>
+<div class="panel tablo-kaydir"><table><tr><th>Tarih</th><th>Kanal</th><th>Alıcı</th><th>Hesap</th><th>İçerik</th><th>Durum</th><th>Kullanıcı</th></tr>
+{% for m in kayitlar %}<tr><td class="nowrap">{{ m.tarih|tarih }}</td><td>{{ m.kanal }}</td><td>{{ m.alici }}</td><td>{% if m.hesap %}<a href="/hesaplar/{{ m.hesap_id }}">{{ m.hesap.unvan }}</a>{% endif %}</td><td><small>{{ (m.konu ~ ' — ' if m.konu else '') ~ m.icerik[:160] }}</small></td><td>{{ durum_rozet(m.durum) }}{% if m.hata %}<br><small class="sessiz">{{ m.hata }}</small>{% endif %}</td><td>{{ m.kullanici }}</td></tr>
+{% else %}<tr><td colspan="7" class="sessiz">Mesaj yok.</td></tr>{% endfor %}</table>{{ sayfalama(sayfa, sayfa_sayisi, toplam, '/mesajlar?kanal=' ~ kanal ~ '&durum=' ~ durum ~ '&') }}</div>
+{% endblock %}

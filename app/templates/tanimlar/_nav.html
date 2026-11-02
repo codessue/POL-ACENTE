@@ -1,0 +1,4 @@
+<div class="sekme">
+{% for kod, (m, b, a) in TANIMLAR.items() %}<a href="/tanimlar/{{ kod }}" class="{{ 'aktif' if yol == '/tanimlar/' ~ kod }}">{{ b }}</a>{% endfor %}
+{% if kullanici.rol != 'temsilci' %}<a href="/tanimlar/kullanicilar" class="{{ 'aktif' if yol == '/tanimlar/kullanicilar' }}">Kullanıcılar</a><a href="/tanimlar/parametreler" class="{{ 'aktif' if yol == '/tanimlar/parametreler' }}">Parametreler</a><a href="/tanimlar/loglar" class="{{ 'aktif' if yol == '/tanimlar/loglar' }}">İşlem Logları</a>{% endif %}
+</div>

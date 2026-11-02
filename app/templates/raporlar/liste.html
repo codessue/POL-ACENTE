@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block baslik %}Raporlar{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Raporlar</h1></div>
+<form class="panel filtre" method="get" id="aralik"><div class="alan"><label>Başlangıç</label><input type="date" name="t1" value="{{ t1.isoformat() }}"></div><div class="alan"><label>Bitiş</label><input type="date" name="t2" value="{{ t2.isoformat() }}"></div><button class="btn">Tarih Aralığını Uygula</button></form>
+<div class="grid g4">
+{% for kod, ad in RAPORLAR %}<a class="kart vurgu" href="/raporlar/{{ kod }}?t1={{ t1 }}&t2={{ t2 }}" style="color:inherit"><div class="etiket">Rapor</div><div class="deger" style="font-size:16px">{{ ad }}</div><div class="alt">{{ t1|tarih }} — {{ t2|tarih }}</div></a>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% from "_makro.html" import durum_rozet, kalan_rozet, dosya_formu, dosya_listesi, alan, secim, tarih_alan %}
+{% block baslik %}Poliçe {{ p.police_no }}{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Poliçe {{ p.police_no }}</h1>{{ durum_rozet(p.durum) }}{% if p.durum == 'Aktif' %}{{ kalan_rozet(p.kalan_gun) }}{% endif %}<span class="rozet gri">{{ p.kaynak }}</span>
+  <div class="sag">
+    {% if p.durum == 'Aktif' %}<a class="btn ikincil kucuk" href="/policeler/yeni?onceki_id={{ p.id }}">Yenile</a>{% endif %}
+    <a class="btn ikincil kucuk" href="/ajanda/yeni?hesap_id={{ p.hesap_id }}&police_id={{ p.id }}">+ Görev</a>
+    <a class="btn ikincil kucuk" href="/talepler/yeni?hesap_id={{ p.hesap_id }}&police_id={{ p.id }}">+ Talep</a>
+    <a class="btn kucuk" href="/policeler/{{ p.id }}/duzenle">Düzenle</a>
+    {% if kullanici.rol != 'temsilci' %}<form method="post" action="/policeler/{{ p.id }}/sil" data-onay="Poliçe kalıcı olarak silinsin mi?"><button class="btn kucuk tehlike">Sil</button></form>{% endif %}
+  </div></div>
+
+<div class="grid g3">
+  <div class="panel"><h2>Poliçe</h2><dl class="kv">
+    <dt>Sigortalı</dt><dd><a href="/hesaplar/{{ p.hesap_id }}"><b>{{ p.hesap.unvan }}</b></a> <small class="sessiz">{{ p.hesap.hes_kod }}</small></dd>
+    <dt>Şirket</dt><dd>{{ p.sirket.ad }}</dd><dt>Branş</dt><dd>{{ p.ana_brans.ad }}{% if p.ara_brans %} / {{ p.ara_brans.ad }}{% endif %}</dd>
+    <dt>No / Zeyl / Yenileme</dt><dd>{{ p.police_no }} / {{ p.zeyl_no }} / {{ p.yenileme_no }}</dd>
+    <dt>Tanzim</dt><dd>{{ p.tanzim_tarihi|tarih }}</dd><dt>Vade</dt><dd>{{ p.baslama_tarihi|tarih }} — {{ p.bitis_tarihi|tarih }}</dd>
+    <dt>Plaka</dt><dd>{{ p.plaka or '—' }}{% if p.arac %} <small class="sessiz">{{ p.arac.marka }} {{ p.arac.model }} {{ p.arac.model_yili or '' }}</small>{% endif %}</dd>
+    <dt>Riziko Adresi</dt><dd>{{ p.riziko_adresi or '—' }}</dd>
+    <dt>Temsilci</dt><dd>{{ p.temsilci.ad_soyad if p.temsilci else '—' }} {% if p.tali %}· tali: {{ p.tali.ad }}{% endif %}</dd>
+    {% if p.onceki_police_id %}<dt>Önceki Poliçe</dt><dd><a href="/policeler/{{ p.onceki_police_id }}">#{{ p.onceki_police_id }}</a></dd>{% endif %}
+    {% if sonraki %}<dt>Yenilendiği Poliçe</dt><dd><a href="/policeler/{{ sonraki.id }}">{{ sonraki.police_no }}</a></dd>{% endif %}
+    {% if surec %}<dt>Yenileme Süreci</dt><dd><a href="/yenileme/{{ surec.id }}">{{ durum_rozet(surec.pozisyon) }}</a></dd>{% endif %}
+    {% if p.durum == 'İptal' %}<dt>İptal</dt><dd>{{ p.iptal_tarihi|tarih }} · {{ p.iptal_nedeni or '' }}</dd>{% endif %}
+    <dt>Açıklama</dt><dd style="white-space:pre-wrap">{{ p.aciklama or '' }}</dd><dt>Kayıt</dt><dd>{{ p.olusturma|tarih }} · {{ p.olusturan or '' }}</dd></dl></div>
+
+  <div class="panel"><h2>Prim & Tahsilat</h2>
+    <div class="grid g3" style="gap:8px;margin-bottom:10px">
+      <div class="kart"><div class="etiket">Brüt</div><div class="deger" style="font-size:18px">{{ p.brut_prim|tl }}</div></div>
+      <div class="kart"><div class="etiket">Komisyon</div><div class="deger" style="font-size:18px">{{ p.komisyon|tl }}</div></div>
+      <div class="kart {{ 'tehlike' if p.bakiye > 0 else 'iyi' }}"><div class="etiket">Bakiye</div><div class="deger" style="font-size:18px">{{ p.bakiye|tl }}</div></div>
+    </div>
+    <p class="kucuk sessiz">Net {{ p.net_prim|tl }} · {{ p.odeme_sekli }} · {{ p.taksit_sayisi }} taksit · {{ p.para_birimi }}</p>
+    <table><tr><th>#</th><th>Vade</th><th class="sag">Tutar</th><th>Durum</th><th></th></tr>
+    {% for t in p.taksitler %}<tr><td>{{ t.sira }}</td><td>{{ t.vade|tarih }}</td><td class="sag">{{ t.tutar|tl }}</td>
+      <td>{% if t.odendi %}<span class="rozet ok">Ödendi {{ t.odeme_tarihi|tarih }}</span>{% elif t.vade < bugun() %}<span class="rozet bad">Gecikti</span>{% else %}<span class="rozet gri">Bekliyor</span>{% endif %}</td>
+      <td>{% if not t.odendi and p.durum == 'Aktif' %}<form method="post" action="/tahsilat/taksit/{{ t.id }}/ode" class="satir-islem"><select name="tahsilat_sekli" style="width:110px"><option>Nakit</option><option>Kredi Kartı</option><option>Havale/EFT</option><option>Çek</option></select><button class="btn kucuk ok">Tahsil</button></form>{% endif %}</td></tr>{% endfor %}</table>
+    {% if p.durum == 'Aktif' and not p.taksitler|selectattr('odendi')|list %}<form method="post" action="/policeler/{{ p.id }}/taksit-plani" style="margin-top:6px"><button class="btn kucuk gri">Taksit planını yeniden oluştur</button></form>{% endif %}
+    <details style="margin-top:10px"><summary>Serbest tahsilat gir</summary>
+      <form method="post" action="/tahsilat/police/{{ p.id }}" class="form-grid" style="margin-top:8px">{{ alan('tutar','Tutar','',gerekli=True) }}{{ secim('tahsilat_sekli','Şekil',['Nakit','Kredi Kartı','Havale/EFT','Çek','Senet'],'Nakit',bos=none) }}{{ tarih_alan('tarih','Tarih',bugun()) }}{{ alan('makbuz_no','Makbuz No') }}{{ alan('aciklama','Açıklama','',sinif='genis') }}<div><button class="btn">Kaydet</button></div></form></details>
+    {% if p.tahsilatlar %}<h3 style="margin-top:12px">Tahsilatlar</h3><table>{% for t in p.tahsilatlar|sort(attribute='tarih', reverse=True) %}<tr><td>{{ t.tarih|tarih }}</td><td>{{ t.tahsilat_sekli }}</td><td>{{ t.aciklama or '' }}</td><td class="sag">{{ t.tutar|tl }}</td><td>{{ durum_rozet(t.durum) }}</td></tr>{% endfor %}</table>{% endif %}
+  </div>
+
+  <div class="panel"><h2>İşlemler</h2>
+    {% if p.durum == 'Aktif' %}<details><summary>Poliçeyi iptal et</summary><form method="post" action="/policeler/{{ p.id }}/iptal" class="form-grid" style="margin-top:8px" data-onay="Poliçe iptal edilsin mi?">{{ tarih_alan('iptal_tarihi','İptal Tarihi',bugun()) }}{{ alan('iptal_nedeni','Neden','',sinif='genis') }}<div><button class="btn tehlike">İptal Et</button></div></form></details>{% endif %}
+    <h3 style="margin-top:14px">Mesaj Gönder</h3>
+    <form method="post" action="/mesajlar/gonder"><input type="hidden" name="hesap_id" value="{{ p.hesap_id }}"><input type="hidden" name="police_id" value="{{ p.id }}">
+      <div class="form-grid">{{ secim('kanal','Kanal',['SMS','E-Posta','WhatsApp'],'SMS',bos=none) }}<div class="alan"><label>Şablon</label><select name="sablon_id" required>{% for s in sablonlar %}<option value="{{ s.id }}">{{ s.ad }}</option>{% endfor %}</select></div></div>
+      <button class="btn kucuk" style="margin-top:6px">Gönder</button></form>
+    {% if mesajlar %}<table style="margin-top:8px">{% for m in mesajlar[:5] %}<tr><td class="nowrap">{{ m.tarih|tarih }}</td><td>{{ m.kanal }}</td><td>{{ durum_rozet(m.durum) }}</td></tr>{% endfor %}</table>{% endif %}
+    <h3 style="margin-top:14px">Dosyalar</h3>{{ dosya_formu('police', p.id) }}{{ dosya_listesi(dosyalar) }}
+    <h3 style="margin-top:14px">Geçmiş</h3><ul class="zaman-cizgisi">{% for l in loglar %}<li><b>{{ l.islem }}</b> <span class="sessiz">· {{ l.kullanici }} · {{ l.tarih|tarih }}</span>{% if l.aciklama %}<br><small>{{ l.aciklama }}</small>{% endif %}</li>{% endfor %}</ul>
+  </div>
+</div>
+{% endblock %}

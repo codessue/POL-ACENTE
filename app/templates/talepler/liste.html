@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% from "_makro.html" import sayfalama, nesne_secim, secim, durum_rozet %}
+{% block baslik %}Talepler{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Müşteri Talepleri</h1><div class="sag"><a class="btn" href="/talepler/yeni">+ Yeni Talep</a></div></div>
+<form class="panel filtre" method="get">{{ secim('durum','Durum',DURUMLAR,durum,bos='Açık + İşlemde',ekstra='data-oto-gonder') }}{{ secim('talep_turu','Tür',TURLER,talep_turu,bos='Tümü',ekstra='data-oto-gonder') }}{{ nesne_secim('temsilci_id','Temsilci',temsilciler,temsilci_id,'ad_soyad',bos='Tümü',ekstra='data-oto-gonder') }}<noscript><button class="btn">Uygula</button></noscript></form>
+<div class="panel tablo-kaydir"><table><tr><th>#</th><th>Durum</th><th>Tarih</th><th>Tür</th><th>Müşteri</th><th>Poliçe</th><th>Açıklama</th><th>Temsilci</th><th></th></tr>
+{% for t in kayitlar %}<tr><td>{{ t.id }}</td><td>{{ durum_rozet(t.durum) }}</td><td class="nowrap">{{ t.olusturma|tarih }}</td><td>{{ t.talep_turu }}</td><td><a href="/hesaplar/{{ t.hesap_id }}">{{ t.hesap.unvan }}</a></td><td>{% if t.police %}<a href="/policeler/{{ t.police_id }}">{{ t.police.police_no }}</a>{% endif %}</td><td>{{ t.aciklama[:120] }}</td><td>{{ t.temsilci.ad_soyad if t.temsilci else '' }}</td><td><a class="btn kucuk ikincil" href="/talepler/{{ t.id }}">Aç</a></td></tr>
+{% else %}<tr><td colspan="9" class="sessiz">Talep yok.</td></tr>{% endfor %}</table>{{ sayfalama(sayfa, sayfa_sayisi, toplam, '/talepler?durum=' ~ durum ~ '&') }}</div>
+{% endblock %}

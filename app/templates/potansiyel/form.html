@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% from "_makro.html" import alan, tarih_alan, secim, nesne_secim, metin %}
+{% block baslik %}Potansiyel Kaydı{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>{{ 'Potansiyel Düzenle' if p and p.id else 'Yeni Potansiyel Satış Kaydı' }}</h1></div>
+<form method="post" class="panel">
+  <h2>Aday Müşteri</h2>
+  <div class="form-grid">{{ alan('unvan','Ünvan / Ad Soyad',p.unvan if p else '',gerekli=True,sinif='genis') }}{{ alan('tc_no','TC No',p.tc_no if p else '') }}{{ alan('vergi_no','Vergi No',p.vergi_no if p else '') }}{{ alan('gsm','GSM',p.gsm if p else '') }}{{ alan('telefon','Telefon',p.telefon if p else '') }}{{ alan('eposta','E-Posta',p.eposta if p else '') }}
+  {{ alan('il','İl',p.il if p else '') }}{{ alan('ilce','İlçe',p.ilce if p else '') }}{{ alan('adres','Adres',p.adres if p else '',sinif='genis') }}</div>
+  <h2 style="margin-top:18px">Mevcut (Dış) Poliçe</h2>
+  <div class="form-grid">{{ nesne_secim('ana_brans_id','Branş',branslar,p.ana_brans_id if p else none,gerekli=True) }}{{ alan('eski_sirket','Mevcut Şirket',p.eski_sirket if p else '') }}{{ alan('eski_acente','Mevcut Acente',p.eski_acente if p else '') }}{{ alan('eski_police_no','Poliçe No',p.eski_police_no if p else '') }}
+  {{ tarih_alan('eski_tanzim','Tanzim',p.eski_tanzim if p else none) }}{{ tarih_alan('eski_baslama','Başlama',p.eski_baslama if p else none) }}{{ tarih_alan('eski_bitis','Bitiş',p.eski_bitis if p else none) }}{{ alan('eski_brut_prim','Brüt Prim',p.eski_brut_prim if p else '') }}</div>
+  <h2 style="margin-top:18px">Araç</h2>
+  <div class="form-grid">{{ alan('plaka','Plaka',p.plaka if p else '',ekstra='data-plaka') }}{{ alan('marka','Marka',p.marka if p else '') }}{{ alan('model','Model',p.model if p else '') }}{{ alan('model_yili','Model Yılı',p.model_yili if p else '',tip='number') }}</div>
+  <h2 style="margin-top:18px">Takip</h2>
+  <div class="form-grid">{{ nesne_secim('temsilci_id','Temsilci',temsilciler,p.temsilci_id if p else kullanici.temsilci_id,'ad_soyad') }}{{ secim('kaynak','Kaynak',['Manuel','Web Formu','Çağrı','Referans','İçe Aktarım','Sosyal Medya'],p.kaynak if p else 'Manuel',bos=none) }}
+  {% if p and p.id %}{{ secim('durum','Durum',['Açık','Sürece Alındı','Kazanıldı','Kaybedildi'],p.durum,bos=none) }}{% endif %}{{ metin('aciklama','Açıklama',p.aciklama if p else '') }}</div>
+  <div style="margin-top:16px;display:flex;gap:8px"><button class="btn">Kaydet</button><a class="btn gri" href="/potansiyel">Vazgeç</a>
+  {% if p and p.id %}<form method="post" action="/potansiyel/{{ p.id }}/sil" data-onay="Silinsin mi?" style="margin-left:auto"><button class="btn tehlike">Sil</button></form>{% endif %}</div>
+</form>
+{% endblock %}

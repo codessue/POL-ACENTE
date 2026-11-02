@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% from "_makro.html" import alan, secim, nesne_secim %}
+{% block baslik %}Kullanıcılar{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Tanımlar · Kullanıcılar</h1></div>
+{% include "tanimlar/_nav.html" %}
+<div class="grid g2">
+<div class="panel"><table><tr><th>Kullanıcı</th><th>Ad Soyad</th><th>Rol</th><th>Temsilci</th><th>Aktif</th><th></th></tr>
+{% for u in liste %}<tr><td>{{ u.kullanici_adi }}</td><td>{{ u.ad_soyad }}</td><td><span class="rozet {{ 'info' if u.rol == 'admin' else 'gri' }}">{{ u.rol }}</span></td><td>{{ u.temsilci.ad_soyad if u.temsilci else '' }}</td><td>{{ '✓' if u.aktif else '✗' }}</td>
+<td><details><summary>Düzenle</summary><form method="post" style="margin-top:6px"><input type="hidden" name="id" value="{{ u.id }}"><div class="form-grid">{{ alan('kullanici_adi','Kullanıcı Adı',u.kullanici_adi,gerekli=True) }}{{ alan('ad_soyad','Ad Soyad',u.ad_soyad,gerekli=True) }}{{ secim('rol','Rol',['admin','yonetici','temsilci'],u.rol,bos=none) }}{{ alan('eposta','E-Posta',u.eposta or '') }}{{ nesne_secim('temsilci_id','Temsilci Kartı',temsilciler,u.temsilci_id,'ad_soyad') }}{{ alan('sifre','Yeni Parola (boş = değişmez)','',tip='password') }}{{ secim('aktif','Aktif',[('1','Evet'),('0','Hayır')],'1' if u.aktif else '0',bos=none) }}</div><button class="btn kucuk" style="margin-top:6px">Kaydet</button></form></details></td></tr>{% endfor %}</table></div>
+<div class="panel"><h2>Yeni Kullanıcı</h2>
+<form method="post"><div class="form-grid">{{ alan('kullanici_adi','Kullanıcı Adı','',gerekli=True) }}{{ alan('ad_soyad','Ad Soyad','',gerekli=True) }}{{ secim('rol','Rol',['temsilci','yonetici','admin'],'temsilci',bos=none) }}{{ alan('eposta','E-Posta','') }}{{ nesne_secim('temsilci_id','Temsilci Kartı',temsilciler,none,'ad_soyad') }}{{ alan('sifre','Parola','',tip='password',gerekli=True) }}</div><button class="btn" style="margin-top:8px">Oluştur</button></form>
+<p class="kucuk sessiz" style="margin-top:10px"><b>admin</b>: her şey. <b>yonetici</b>: tanımlar, silme, içe aktarım, kullanıcılar. <b>temsilci</b>: günlük işlemler (kart, poliçe, yenileme, tahsilat, mesaj).</p></div></div>
+{% endblock %}

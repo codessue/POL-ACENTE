@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block baslik %}Poliçe İçe Aktar{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Poliçe İçe Aktarım</h1><div class="sag"><a class="btn ikincil" href="/policeler/ice-aktar/sablon">Örnek CSV indir</a></div></div>
+<div class="grid g2">
+<div class="panel"><h2>Dosya Yükle</h2>
+<p class="kucuk">CSV (noktalı virgül veya virgül ayraçlı, UTF-8) ya da XLSX. İlk satır kolon başlıkları olmalı. Hesap kartı bulunamazsa <b>unvan</b> ile otomatik açılır. Aynı şirket + poliçe no + zeyl + yenileme no varsa satır atlanır.</p>
+<form method="post" enctype="multipart/form-data"><div class="alan"><label>Dosya</label><input type="file" name="dosya" accept=".csv,.xlsx" required></div><button class="btn">Aktar</button></form>
+<h3 style="margin-top:14px">Kolonlar</h3><code style="font-size:12px;word-break:break-all">{{ kolonlar|join('; ') }}</code>
+<p class="kucuk sessiz">sirket_kod ve ana_brans_kod değerleri Tanımlar'daki kodlarla eşleşmelidir (örn. ANA, AXA / TRF, KSK, KNT). Tarihler YYYY-AA-GG veya GG.AA.YYYY olabilir.</p></div>
+<div class="panel"><h2>Sonuç</h2>
+{% if sonuc %}<div class="grid g3" style="gap:8px"><div class="kart iyi"><div class="etiket">Eklenen</div><div class="deger">{{ sonuc.eklenen }}</div></div><div class="kart"><div class="etiket">Atlanan (mevcut)</div><div class="deger">{{ sonuc.atlanan }}</div></div><div class="kart {{ 'tehlike' if sonuc.hatalar }}"><div class="etiket">Hata</div><div class="deger">{{ sonuc.hatalar|length }}</div></div></div>
+{% if sonuc.hatalar %}<ul class="kucuk" style="margin-top:10px">{% for h in sonuc.hatalar[:100] %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}
+{% else %}<p class="sessiz">Henüz aktarım yapılmadı.</p>{% endif %}</div></div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block baslik %}Parametreler{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Tanımlar · Parametreler</h1></div>
+{% include "tanimlar/_nav.html" %}
+<form method="post" class="panel" style="max-width:900px"><table><tr><th>Parametre</th><th>Değer</th><th>Açıklama</th></tr>
+{% for p in liste %}<tr><td><code>{{ p.ad }}</code></td><td><input name="p__{{ p.ad }}" value="{{ p.deger or '' }}"></td><td class="kucuk sessiz">{{ p.aciklama or '' }}</td></tr>{% endfor %}
+<tr style="background:#f7f9fc"><td><input name="yeni_ad" placeholder="yeni_parametre"></td><td><input name="yeni_deger" placeholder="değer"></td><td><input name="yeni_aciklama" placeholder="açıklama"></td></tr></table>
+<button class="btn" style="margin-top:10px">Kaydet</button></form>
+{% endblock %}

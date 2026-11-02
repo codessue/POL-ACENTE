@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% from "_makro.html" import alan, tarih_alan, secim, nesne_secim, metin, hesap_arama %}
+{% block baslik %}Görev{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>{{ 'Görev Düzenle' if g else 'Yeni Görev / Randevu' }}</h1></div>
+<form method="post" class="panel" style="max-width:800px">
+  {% if police_id %}<input type="hidden" name="police_id" value="{{ police_id }}">{% endif %}
+  <div class="form-grid">
+    {{ alan('baslik','Başlık',g.baslik if g else '',gerekli=True,sinif='genis') }}
+    {{ secim('tip','Tip',TIPLER,g.tip if g else 'Görev',bos=none) }}
+    {{ tarih_alan('tarih','Tarih',g.tarih if g else bugun(),gerekli=True) }}
+    {{ alan('saat','Saat',g.saat if g else '',tip='time') }}
+    {{ nesne_secim('atanan_id','Atanan Kullanıcı',kullanicilar,(g.atanan_id if g else kullanici.id),'ad_soyad',bos=none) }}
+    {% if hesap %}<input type="hidden" name="hesap_id" value="{{ hesap.id }}"><div class="alan genis"><label>Hesap</label><div><a href="/hesaplar/{{ hesap.id }}"><b>{{ hesap.unvan }}</b></a></div></div>{% else %}{{ hesap_arama(gerekli=False) }}{% endif %}
+    {{ metin('aciklama','Açıklama',g.aciklama if g else '') }}
+  </div>
+  <div style="margin-top:14px;display:flex;gap:8px"><button class="btn">Kaydet</button><a class="btn gri" href="/ajanda">Vazgeç</a>
+  {% if g %}<form method="post" action="/ajanda/{{ g.id }}/durum" style="margin-left:auto"><input type="hidden" name="durum" value="İptal"><button class="btn gri">İptal Et</button></form><form method="post" action="/ajanda/{{ g.id }}/sil" data-onay="Silinsin mi?"><button class="btn tehlike">Sil</button></form>{% endif %}</div>
+</form>
+{% endblock %}

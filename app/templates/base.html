@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block baslik %}{{ APP_NAME }}{% endblock %} · {{ APP_NAME }}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="logo">{{ APP_NAME }}<small>Acente Yönetim Sistemi v{{ VERSION }}</small></div>
+    <nav>
+      {% for href, ad, ikon in menu %}
+      <a href="{{ href }}" class="{{ 'aktif' if (yol == href if href == '/' else yol.startswith(href)) }}"><span>{{ ikon }}</span>{{ ad }}</a>
+      {% endfor %}
+    </nav>
+    <div class="alt">{{ kullanici.ad_soyad if kullanici }}<br><a href="/sifre" style="color:#fff">Parola</a> · <a href="/logout" style="color:#fff">Çıkış</a></div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <form action="/hesaplar" method="get"><input type="search" name="q" placeholder="Hesap, TC/VKN, telefon veya plaka ara…" value=""></form>
+      <a class="btn kucuk" href="/hesaplar/yeni">+ Hesap</a>
+      <a class="btn kucuk ikincil" href="/policeler/yeni">+ Poliçe</a>
+      <span class="kul">{{ bugun().strftime('%d.%m.%Y') }}</span>
+    </header>
+    <main class="icerik">
+      {% for f in flashlar %}<div class="flash {{ f.tur }}">{{ f.mesaj }}</div>{% endfor %}
+      {% block icerik %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>

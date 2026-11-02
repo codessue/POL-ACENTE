@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% from "_makro.html" import sayfalama, nesne_secim, secim, durum_rozet, kalan_rozet %}
+{% block baslik %}Potansiyel Satış{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Potansiyel Satış <small class="sessiz">(dış poliçeler)</small></h1><div class="sag"><a class="btn ikincil" href="/potansiyel/disa-aktar?q={{ q }}&durum={{ durum }}">Excel</a><a class="btn" href="/potansiyel/yeni">+ Yeni Kayıt</a></div></div>
+<form class="panel filtre" method="get">
+  <div class="alan" style="flex:2"><label>Ara</label><input name="q" value="{{ q }}" placeholder="Ünvan, plaka, TC, GSM, poliçe no"></div>
+  {{ secim('durum','Durum',DURUMLAR,durum,bos='Tümü') }}{{ nesne_secim('ana_brans_id','Branş',branslar,ana_brans_id,bos='Tümü') }}{{ nesne_secim('temsilci_id','Temsilci',temsilciler,temsilci_id,'ad_soyad',bos='Tümü') }}
+  <button class="btn">Filtrele</button><a class="btn gri" href="/potansiyel">Temizle</a></form>
+<div class="panel tablo-kaydir"><table><tr><th>Durum</th><th>Ünvan</th><th>GSM</th><th>Branş</th><th>Plaka / Araç</th><th>Mevcut Şirket</th><th>Bitiş</th><th>Kalan</th><th class="sag">Eski Prim</th><th>Temsilci</th><th>Kaynak</th><th></th></tr>
+{% for p in kayitlar %}<tr><td>{{ durum_rozet(p.durum) }}</td><td><b>{{ p.unvan }}</b>{% if p.hesap_id %} <a href="/hesaplar/{{ p.hesap_id }}" class="kucuk">kart</a>{% endif %}</td><td>{{ p.gsm or '' }}</td><td>{{ p.ana_brans.ad }}</td><td>{{ p.plaka or '' }} <small class="sessiz">{{ p.marka or '' }} {{ p.model or '' }}</small></td><td>{{ p.eski_sirket or '' }}</td>
+<td>{{ p.eski_bitis|tarih }}</td><td>{% if p.eski_bitis %}{{ kalan_rozet((p.eski_bitis - bugun()).days) }}{% endif %}</td><td class="sag">{{ p.eski_brut_prim|tl }}</td><td>{{ p.temsilci.ad_soyad if p.temsilci else '' }}</td><td>{{ p.kaynak }}</td>
+<td class="satir-islem">{% if p.durum == 'Açık' %}<form method="post" action="/yenileme/potansiyelden/{{ p.id }}"><button class="btn kucuk">Sürece Al</button></form>{% endif %}<a class="btn kucuk gri" href="/potansiyel/{{ p.id }}/duzenle">Düzenle</a></td></tr>
+{% else %}<tr><td colspan="12" class="sessiz">Kayıt yok.</td></tr>{% endfor %}</table>
+{{ sayfalama(sayfa, sayfa_sayisi, toplam, '/potansiyel?q=' ~ q ~ '&durum=' ~ durum ~ '&') }}</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% macro alan(ad, etiket, deger='', tip='text', gerekli=False, placeholder='', ekstra='', sinif='') -%}
+<div class="alan {{ sinif }}"><label for="f_{{ ad }}">{{ etiket }}{% if gerekli %} *{% endif %}</label>
+<input id="f_{{ ad }}" type="{{ tip }}" name="{{ ad }}" value="{{ deger if deger is not none else '' }}" {% if gerekli %}required{% endif %} placeholder="{{ placeholder }}" {{ ekstra|safe }}></div>
+{%- endmacro %}
+
+{% macro tarih_alan(ad, etiket, deger=None, gerekli=False, sinif='') -%}
+<div class="alan {{ sinif }}"><label for="f_{{ ad }}">{{ etiket }}{% if gerekli %} *{% endif %}</label>
+<input id="f_{{ ad }}" type="date" name="{{ ad }}" value="{{ deger.isoformat() if deger else '' }}" {% if gerekli %}required{% endif %}></div>
+{%- endmacro %}
+
+{% macro secim(ad, etiket, secenekler, deger=None, bos='— Seçiniz —', gerekli=False, sinif='', ekstra='') -%}
+<div class="alan {{ sinif }}"><label for="f_{{ ad }}">{{ etiket }}{% if gerekli %} *{% endif %}</label>
+<select id="f_{{ ad }}" name="{{ ad }}" {% if gerekli %}required{% endif %} {{ ekstra|safe }}>
+{% if bos is not none %}<option value="">{{ bos }}</option>{% endif %}
+{% for s in secenekler %}{% if s is string %}<option value="{{ s }}" {{ 'selected' if s == deger }}>{{ s }}</option>
+{% else %}<option value="{{ s[0] }}" {{ 'selected' if s[0]|string == deger|string and deger is not none }}>{{ s[1] }}</option>{% endif %}{% endfor %}
+</select></div>
+{%- endmacro %}
+
+{% macro nesne_secim(ad, etiket, nesneler, deger=None, gosterim='ad', gerekli=False, sinif='', bos='— Seçiniz —', ekstra='') -%}
+<div class="alan {{ sinif }}"><label for="f_{{ ad }}">{{ etiket }}{% if gerekli %} *{% endif %}</label>
+<select id="f_{{ ad }}" name="{{ ad }}" {% if gerekli %}required{% endif %} {{ ekstra|safe }}>
+{% if bos is not none %}<option value="">{{ bos }}</option>{% endif %}
+{% for n in nesneler %}<option value="{{ n.id }}" {{ 'selected' if n.id == deger }}>{{ n[gosterim] }}</option>{% endfor %}
+</select></div>
+{%- endmacro %}
+
+{% macro metin(ad, etiket, deger='', satir=3, sinif='genis') -%}
+<div class="alan {{ sinif }}"><label for="f_{{ ad }}">{{ etiket }}</label><textarea id="f_{{ ad }}" name="{{ ad }}" rows="{{ satir }}">{{ deger or '' }}</textarea></div>
+{%- endmacro %}
+
+{% macro sayfalama(sayfa, sayfa_sayisi, toplam, yol) -%}
+{% if sayfa_sayisi > 1 %}
+<div class="sayfalama">
+  <span class="sessiz">{{ toplam }} kayıt · sayfa {{ sayfa }}/{{ sayfa_sayisi }}</span>
+  {% if sayfa > 1 %}<a href="{{ yol }}sayfa={{ sayfa - 1 }}">‹ Önceki</a>{% endif %}
+  {% if sayfa < sayfa_sayisi %}<a href="{{ yol }}sayfa={{ sayfa + 1 }}">Sonraki ›</a>{% endif %}
+</div>
+{% else %}<div class="sayfalama"><span class="sessiz">{{ toplam }} kayıt</span></div>{% endif %}
+{%- endmacro %}
+
+{% macro durum_rozet(d) -%}
+{% set r = {'Aktif':'ok','Yenilendi':'info','İptal':'bad','Süresi Doldu':'warn','Açık':'info','İşlemde':'warn','Kapandı':'gri','Tamamlandı':'ok',
+            'Bekliyor':'gri','Arandı':'info','Teklif Alındı':'warn','Teklif Sunuldu':'warn','Kaybedildi':'bad','Gönderildi':'ok','Hata':'bad','Kuyrukta':'gri',
+            'Sürece Alındı':'info','Kazanıldı':'ok','Tahsil Edildi':'ok','İade':'bad'} %}
+<span class="rozet {{ r.get(d, '') }}">{{ d }}</span>
+{%- endmacro %}
+
+{% macro kalan_rozet(gun) -%}
+{% if gun < 0 %}<span class="rozet bad">{{ -gun }} gün geçti</span>{% elif gun <= 7 %}<span class="rozet bad">{{ gun }} gün</span>{% elif gun <= 30 %}<span class="rozet warn">{{ gun }} gün</span>{% else %}<span class="rozet gri">{{ gun }} gün</span>{% endif %}
+{%- endmacro %}
+
+{% macro hesap_arama(deger_id=None, deger_metin='', gerekli=True) -%}
+<div class="alan genis"><label>Hesap Kartı{% if gerekli %} *{% endif %}</label>
+<input list="hesap_liste" data-hesap-ara="hesap_liste" data-hedef="#hesap_id" value="{{ deger_metin }}" placeholder="Ad, hesap kodu, TC veya telefon yazın…" autocomplete="off">
+<datalist id="hesap_liste"></datalist>
+<input type="hidden" id="hesap_id" name="hesap_id" value="{{ deger_id or '' }}" {% if gerekli %}required{% endif %}>
+<div class="yardim">Listeden seçin; yeni müşteri için <a href="/hesaplar/yeni" target="_blank">hesap kartı açın</a>.</div></div>
+{%- endmacro %}
+
+{% macro dosya_formu(yer, yer_id) -%}
+<form method="post" action="/dosyalar/yukle" enctype="multipart/form-data" class="filtre">
+  <input type="hidden" name="yer" value="{{ yer }}"><input type="hidden" name="yer_id" value="{{ yer_id }}">
+  <div class="alan"><label>Tür</label><select name="tur">{% for t in ['Poliçe','Ruhsat','Kimlik','Teklif','Hasar','Sözleşme','Diğer'] %}<option>{{ t }}</option>{% endfor %}</select></div>
+  <div class="alan"><label>Açıklama</label><input name="aciklama"></div>
+  <div class="alan"><label>Dosya</label><input type="file" name="dosya" required></div>
+  <button class="btn">Yükle</button>
+</form>
+{%- endmacro %}
+
+{% macro dosya_listesi(dosyalar) -%}
+{% if dosyalar %}<table><tr><th>Dosya</th><th>Tür</th><th>Açıklama</th><th>Boyut</th><th>Yükleyen</th><th>Tarih</th><th></th></tr>
+{% for d in dosyalar %}<tr><td><a href="/dosyalar/{{ d.id }}">{{ d.orijinal_ad }}</a></td><td>{{ d.tur }}</td><td>{{ d.aciklama or '' }}</td><td>{{ (d.boyut / 1024)|round(0)|int }} KB</td><td>{{ d.kullanici }}</td><td>{{ d.tarih|tarih }}</td>
+<td><form method="post" action="/dosyalar/{{ d.id }}/sil" data-onay="Dosya silinsin mi?"><button class="btn kucuk tehlike">Sil</button></form></td></tr>{% endfor %}</table>
+{% else %}<p class="sessiz">Dosya yok.</p>{% endif %}
+{%- endmacro %}

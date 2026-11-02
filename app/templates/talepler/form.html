@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% from "_makro.html" import secim, nesne_secim, metin, hesap_arama %}
+{% block baslik %}Yeni Talep{% endblock %}
+{% block icerik %}
+<div class="baslik"><h1>Talep Girişi</h1></div>
+<form method="post" class="panel" style="max-width:800px">
+  <div class="form-grid">
+    {% if hesap %}<input type="hidden" name="hesap_id" value="{{ hesap.id }}"><div class="alan genis"><label>Hesap</label><div><a href="/hesaplar/{{ hesap.id }}"><b>{{ hesap.unvan }}</b></a></div></div>
+      <div class="alan"><label>İlgili Poliçe</label><select name="police_id"><option value="">—</option>{% for p in hesap.policeler %}<option value="{{ p.id }}" {{ 'selected' if police_id == p.id }}>{{ p.police_no }} · {{ p.ana_brans.ad }} · {{ p.sirket.ad }}</option>{% endfor %}</select></div>
+    {% else %}{{ hesap_arama() }}{% endif %}
+    {{ secim('talep_turu','Talep Türü',TURLER,'Bilgi',bos=none,gerekli=True) }}
+    {{ nesne_secim('temsilci_id','Temsilci',temsilciler,(hesap.temsilci_id if hesap else kullanici.temsilci_id),'ad_soyad') }}
+    {{ metin('aciklama','Talep Açıklaması','',satir=4) }}
+  </div>
+  <div style="margin-top:14px;display:flex;gap:8px"><button class="btn">Kaydet</button><a class="btn gri" href="/talepler">Vazgeç</a></div>
+</form>
+{% endblock %}

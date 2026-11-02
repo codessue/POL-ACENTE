@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block baslik %}Parola Değiştir{% endblock %}
+{% block icerik %}
+<h1>Parola Değiştir</h1>
+<div class="panel" style="max-width:420px">
+<form method="post">
+  <div class="alan"><label>Mevcut Parola</label><input type="password" name="eski" required></div>
+  <div class="alan"><label>Yeni Parola</label><input type="password" name="yeni" required minlength="6"></div>
+  <div class="alan"><label>Yeni Parola (tekrar)</label><input type="password" name="yeni2" required minlength="6"></div>
+  <button class="btn">Kaydet</button>
+</form></div>
+{% endblock %}
